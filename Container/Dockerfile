@@ -1,5 +1,5 @@
 FROM ubuntu:14.04
-MAINTAINER Siem Hermans email: siem.hermans@os3.nl
+MAINTAINER Siem Hermans, email: siem.hermans@os3.nl
 
 WORKDIR /
 # Update sources & install essential tools
