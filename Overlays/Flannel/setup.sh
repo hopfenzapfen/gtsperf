@@ -17,11 +17,11 @@
 # Originally written by ric03uec, modified by siemhermans
 
 read -r -p "Configure this host as the master or as a slave? [M/S] " RESPONSE
-response=${RESPONSE,,}
+RESPONSE=${RESPONSE,,}
 if [[ $RESPONSE =~ ^(master|m)$ ]]; then
-  export INSTALLER_TYPE=slave
-else
   export INSTALLER_TYPE=master
+else
+  export INSTALLER_TYPE=slave
 fi
 
 NODE_ADDR=$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
