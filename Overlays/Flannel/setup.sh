@@ -16,18 +16,35 @@
 
 # Originally written by ric03uec, modified by siemhermans
 
-if [[ $# > 0 ]]; then
-  if [[ "$1" == "slave" ]]; then
-    export INSTALLER_TYPE=slave
-  else
-    export INSTALLER_TYPE=master
-  fi
+# IMPLEMENT MASTER/SLAVE CHOICE
+
+read -r -p "Configure this host as the master or as a slave? [M/S] " RESPONSE
+response=${RESPONSE,,}
+if [[ $RESPONSE =~ ^(master|m)$ ]]; then
+  export INSTALLER_TYPE=slave
 else
   export INSTALLER_TYPE=master
 fi
 
-export NODE_IP=172.16.0.28
-export MASTER_IP=172.16.0.28
+NODE_ADDR=$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
+if [[ $INSTALLER_TYPE == 'master' ]]; then
+  export MASTER_IP=$NODE_ADDR
+  # Move the appropriate files to allow for autoconfig. Also refer to the comments in the separate files.
+  mv /etc/init/docker.conf /etc/init/docker.conf_bak
+  cp ./docker.conf /etc/init/docker.conf
+  cp ./flanneld.conf /etc/init/flanneld.conf
+  cp ./etcd.conf /etc/init/etcd.conf
+  cp ./etcd_defaults /etc/default/etcd
+else
+  read -r -p "Enter the etcd master IP address: " MASTER_ADDR
+  export MASTER_IP=$MASTER_ADDR
+  # Move the appropriate files to allow for autoconfig. The slave does not require ETCD and refers to the master
+  mv /etc/init/docker.conf /etc/init/docker.conf_bak
+  cp ./docker.conf /etc/init/docker.conf
+  cp ./flanneld.conf /etc/init/flanneld.conf
+fi
+
+export NODE_IP=$NODE_ADDR
 export FLANNEL_SUBNET=10.100.0.0/16
 export DOWNLOAD_PATH=/tmp
 export FLANNEL_VERSION=0.5.5
@@ -55,6 +72,7 @@ install_etcd() {
 }
 
 update_etcd_config() {
+# The commands below are manually overridden in /etc/default/etcd.
 #  echo "ETCD=$ETCD_EXECUTABLE_LOCATION/etcd" | sudo tee -a  /etc/default/etcd
 #  echo "ETCD_OPTS='-listen-client-urls=http://0.0.0.0:4001 -advertise-client-urls 'http://localhost:2379,http://localhost:4001''" | sudo tee -a /etc/default/etcd
    echo "etcd config updated successfully"
@@ -142,4 +160,3 @@ clear_network_entities
 
 trap before_exit EXIT
 start_services
-

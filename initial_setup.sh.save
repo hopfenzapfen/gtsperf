@@ -7,7 +7,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 #Change the hostname
-echo "Enter a hostname" && read "HOSTNAME"
+echo -n "Enter a hostname" && read "HOSTNAME"
 hostname $HOSTNAME && echo $HOSTNAME>/etc/hostname
 sed -i -e 's/sa2host/'$HOSTNAME'/' /etc/hosts
 
@@ -19,3 +19,16 @@ if [[ $response =~ ^(yes|y)$ ]]; then
 	sudo echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list
 	sudo apt-get -yqq update && sudo apt-get install -yqq docker-engine
 fi
+
+echo -n "Select an overlay: > "
+read character
+case $character in
+    1 ) echo "You selected 'Weave'."
+        ;;
+    2 ) echo "You selected 'Calico'."
+        ;;
+    3 ) echo "You selected 'Flannel'."
+        ;;
+    4)  echo "
+    * ) echo "You did not enter a number""
+esac
