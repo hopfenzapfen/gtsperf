@@ -16,8 +16,6 @@
 
 # Originally written by ric03uec, modified by siemhermans
 
-# IMPLEMENT MASTER/SLAVE CHOICE
-
 read -r -p "Configure this host as the master or as a slave? [M/S] " RESPONSE
 response=${RESPONSE,,}
 if [[ $RESPONSE =~ ^(master|m)$ ]]; then

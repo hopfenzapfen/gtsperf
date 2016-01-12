@@ -19,15 +19,16 @@ sed -i -e 's/sa2host/'$HOSTNAME'/' /etc/hosts
 
 # Install Docker
 read -r -p "Install Docker? [Y/n] " RESPONSE
-response=${RESPONSE,,}
+RESPONSE=${RESPONSE,,}
 if [[ $RESPONSE =~ ^(yes|y)$ ]]; then
 	sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
 	sudo echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list
-	sudo apt-get -yqq update && sudo apt-get install -yqq docker-engine
+  printf "\nUpdating sources and installing Docker. Please wait..."
+  sudo apt-get -yqq update && sudo apt-get install -yqq docker-engine
   # Ensure that Docker is running
   SERVICE=docker
   if (( $(ps -ef | grep -v grep | grep $SERVICE | wc -l) > 0 )); then
-    echo "$SERVICE is running."
+    echo "The $SERVICE service is running."
   else
     service $SERVICE start
   fi
@@ -41,7 +42,7 @@ else
 fi
 
 # Overlay selection
-printf "Options\n-------\n1. Weave\n2. Calico\n3. Flannel\n4. None\nSelect an overlay: "
+printf "\nOptions\n-------\n1. Weave\n2. Calico\n3. Flannel\n4. None\nSelect an overlay: "
 read INPUT
 case $INPUT in
     1 ) printf "\nYou selected 'Weave'."
