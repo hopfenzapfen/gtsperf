@@ -1,0 +1,60 @@
+# ETCD STARTEN
+sudo su
+apt-add-repository ppa:project-calico/kilo
+add-apt-repository ppa:cz.nic-labs/bird
+apt-get update
+apt-get install etcd python-etcd
+cd /etc/init/
+etcdip=/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
+echo 'exec /usr/bin/etcd --name="node1" \' >> etcd.conf
+echo "--advertise-client-urls=\"http://$etcdip:2379,http://$etcdip:4001\" \\" >> etcd.conf
+echo '--listen-client-urls="http://0.0.0.0:2379,http://0.0.0.0:4001" \' >> etcd.conf
+echo '--listen-peer-urls "http://0.0.0.0:2380" \' >> etcd.conf
+echo "--initial-advertise-peer-urls \"http://$etcdip:2380\" \\" >> etcd.conf
+echo '--initial-cluster-token $(uuidgen) \' >> etcd.conf
+echo "--initial-cluster \"node1=http://$etcdip:2380\" \\" >> etcd.conf
+echo '--initial-cluster-state "new"' >> etcd.conf
+cd ~/
+service etcd startca
+ 
+# DOCKER STARTEN
+sudo su
+curl -sSL https://get.docker.com/ | sh
+service docker restart
+ 
+#Hostname
+sudo su
+read -p "Deze machine staat in: " hostloc
+echo "$hostloc" > /etc/hostname
+hostname $hostloc
+sed -i "s|sa2host|$hostloc|g" /etc/hosts
+echo "Changed to: $(cat /etc/hosts | grep $hostloc)"
+exec bash
+ 
+# CALICO INSTALLEREN
+sudo su
+wget https://github.com/projectcalico/calico-docker/releases/download/v0.13.0/calicoctl
+chmod +x calicoctl
+mv calicoctl /usr/bin/
+ 
+# CALICO NODE1 CONFIG
+calicoctl node
+ 
+# CALICO NODE2 CONFIG
+read -p "Volle IP address van Node1 (172.16.0.X): " remetcd
+export ETCD_AUTHORITY=$remetcd:2379
+calicoctl node
+docker ps
+ 
+# CALICO PROFILES
+calicoctl profile add A_B
+ 
+# CALICO NODE1 START
+docker run --net=none --name workload-A -tid ubuntu
+calicoctl container add workload-A 192.168.0.1
+calicoctl container workload-A profile append A_B
+ 
+# CALICO NODE2 START
+docker run --net=none --name workload-B -tid ubuntu
+calicoctl container add workload-B 192.168.0.2
+calicoctl container workload-B profile append A_B
