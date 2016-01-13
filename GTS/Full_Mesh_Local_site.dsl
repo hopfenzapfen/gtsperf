@@ -4,7 +4,7 @@ FullMesh {
 
 	host {
 		id="h1"
-		location="AMS"
+		location="PRG"
 		port {id="port11"}
 		port {id="port12"}
 		port {id="port13"}
@@ -13,7 +13,7 @@ FullMesh {
 
 	host {
 		id="h2"
-		location="AMS"
+		location="PRG"
 		port {id="port21"}
 		port {id="port22"}
 		port {id="port23"}
@@ -22,7 +22,7 @@ FullMesh {
 
 	host {
 		id="h3"
-		location="AMS"
+		location="PRG"
 		port {id="port31"}
 		port {id="port32"}
 		port {id="port33"}
@@ -31,7 +31,7 @@ FullMesh {
 
 	host {
 		id="h4"
-		location="AMS"
+		location="PRG"
 		port {id="port41"}
 		port {id="port42"}
 		port {id="port43"}
@@ -40,7 +40,7 @@ FullMesh {
 
 	host {
 		id="h5"
-		location="AMS"
+		location="PRG"
 		port {id="port51"}
 		port {id="port52"}
 		port {id="port53"}
