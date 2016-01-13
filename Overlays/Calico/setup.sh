@@ -3,7 +3,18 @@
 # Installing Calico with etcd from project PPA's. Please update the 
 # OpenStack version if you run this script in the future.
 echo "Installing Calico. Please wait..."
+
+# Add Calico PPA 
 apt-add-repository -y ppa:project-calico/kilo
+add-apt-repository -y ppa:cz.nic-labs/bird
+apt-get update
+# Add the correct apt preferences to ensure the correct version of etcd is downloaded
+rm /etc/apt/preferences
+echo "Package: *" >> /etc/apt/preferences
+echo "Pin: release o=LP-PPA-project-calico-*" >> /etc/apt/preferences
+echo "Pin-Priority: 1001" >> /etc/apt/preferences
+
+# Add the Bird PPA
 add-apt-repository -y ppa:cz.nic-labs/bird
 apt-get update
 
@@ -30,13 +41,11 @@ if [[ $RESPONSE =~ ^(yes|y)$ ]]; then
   echo "--initial-cluster \"node1=http://$ETCDIP:2380\" \\" >> etcd.conf
   echo '--initial-cluster-state "new"' >> etcd.conf
   cd ~/ && service etcd start
+  export ETCD_AUTHORITY=$ETCDIP:2379
+  # Start the Calico (master) node
   calicoctl node
 else
   read -r -p "Enter the IP address of the etcd node in the network: " MASTER_IP
-  # Refer to the etcd authority, previously set up  
+  # Refer to the etcd authority, previously set up
   export ETCD_AUTHORITY=$MASTER_IP:2379
-  calicoctl node
-fi
-
-
-
+fi 
