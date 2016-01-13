@@ -1,6 +1,6 @@
 FullMesh {
 	description = "Full mesh within a single site"
-	id="FullMesh"
+	id="FullMesh_Local"
 
 	host {
 		id="h1"

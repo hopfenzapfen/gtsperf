@@ -1,6 +1,6 @@
 FullMesh {
 	description = "Full mesh between all sites"
-	id="FullMesh"
+	id="FullMesh_Dispersed"
 
 	host {
 		id="h1"
