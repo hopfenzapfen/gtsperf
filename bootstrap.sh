@@ -41,6 +41,10 @@ else
   fi
 fi
 
+# Increase kernel version to 3.19
+echo "Upgrading kernel version..."
+sudo apt-get install -yqq linux-generic-lts-vivid
+
 # Overlay selection
 printf "\nOptions\n-------\n1. Weave\n2. Calico\n3. Flannel\n4. None\nSelect an overlay: "
 read INPUT
