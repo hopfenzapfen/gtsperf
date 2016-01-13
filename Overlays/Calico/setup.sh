@@ -48,4 +48,11 @@ else
   read -r -p "Enter the IP address of the etcd node in the network: " MASTER_IP
   # Refer to the etcd authority, previously set up
   export ETCD_AUTHORITY=$MASTER_IP:2379
+  calicoctl node
 fi 
+
+# NOTE: Since servers in GTS are initially deployed with the same hostname, a reboot of the
+# etcd server may be required in order to update the key-value pairs. Afterwards, the etcd
+# service on the master node has to be started (This script doesn't include an init script).
+# Lastly, the second node has to export the ETCD_AUTHORITY environment variable again and run
+# 'calicoctl node'. At this point a BGP relationship between the nodes should be established.
