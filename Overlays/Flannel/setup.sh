@@ -29,17 +29,17 @@ if [[ $INSTALLER_TYPE == 'master' ]]; then
   export MASTER_IP=$NODE_ADDR
   # Move the appropriate files to allow for autoconfig. Also refer to the comments in the separate files.
   mv /etc/init/docker.conf /etc/init/docker.conf_bak
-  cp ./docker.conf /etc/init/docker.conf
-  cp ./flanneld.conf /etc/init/flanneld.conf
-  cp ./etcd.conf /etc/init/etcd.conf
-  cp ./etcd_defaults /etc/default/etcd
+  cp ./Configs/docker.conf /etc/init/docker.conf
+  cp ./Configs/flanneld.conf /etc/init/flanneld.conf
+  cp ./Configs/etcd.conf /etc/init/etcd.conf
+  cp ./Configs/etcd_defaults /etc/default/etcd
 else
   read -r -p "Enter the etcd master IP address: " MASTER_ADDR
   export MASTER_IP=$MASTER_ADDR
   # Move the appropriate files to allow for autoconfig. The slave does not require ETCD and refers to the master
   mv /etc/init/docker.conf /etc/init/docker.conf_bak
-  cp ./docker.conf /etc/init/docker.conf
-  cp ./flanneld.conf /etc/init/flanneld.conf
+  cp ./Configs/docker.conf /etc/init/docker.conf
+  cp ./Configs/flanneld.conf /etc/init/flanneld.conf
 fi
 
 export NODE_IP=$NODE_ADDR
