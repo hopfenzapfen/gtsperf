@@ -18,7 +18,7 @@ echo "--initial-advertise-peer-urls \"http://$ETCDIP:2380\" \\" >> etcd.conf
 echo '--initial-cluster-token $(uuidgen) \' >> etcd.conf
 echo "--initial-cluster \"node1=http://$ETCDIP:2380\" \\" >> etcd.conf
 echo '--initial-cluster-state "new"' >> etcd.conf
-cd ~/ && service etcd startca
+cd ~/ && service etcd start
 
 # Install the Calico component
 wget https://github.com/projectcalico/calico-docker/releases/download/v0.13.0/calicoctl

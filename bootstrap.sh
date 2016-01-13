@@ -18,7 +18,7 @@ hostname $HOSTNAME && echo $HOSTNAME>/etc/hostname
 sed -i -e 's/sa2host/'$HOSTNAME'/' /etc/hosts
 
 # Install Docker
-read -r -p "Install Docker? [Y/n] " RESPONSE
+read -r -p "Install Docker? [y/n] " RESPONSE
 RESPONSE=${RESPONSE,,}
 if [[ $RESPONSE =~ ^(yes|y)$ ]]; then
 	sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
@@ -34,7 +34,7 @@ if [[ $RESPONSE =~ ^(yes|y)$ ]]; then
   fi
 else
   echo "WARNING: by not choosing to install Docker, installing an overlay solution may fail."
-  read -r -p "Are you sure you want to continue? [y/N] " RESPONSE
+  read -r -p "Are you sure you want to continue? [y/n] " RESPONSE
   response=${RESPONSE,,}
   if [[ $RESPONSE =~ ^(no|n)$ ]]; then
     exit 1
