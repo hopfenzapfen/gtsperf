@@ -31,7 +31,7 @@ if [[ $RESPONSE =~ ^(yes|y)$ ]]; then
   apt-get install etcd python-etcd
   # Configure etcd
   cd /etc/init/ && rm etcd.conf
-  ETCDIP=/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
+  ETCDIP=`/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
   echo 'exec /usr/bin/etcd --name="node1" \' >> etcd.conf
   echo "--advertise-client-urls=\"http://$ETCDIP:2379,http://$ETCDIP:4001\" \\" >> etcd.conf
   echo '--listen-client-urls="http://0.0.0.0:2379,http://0.0.0.0:4001" \' >> etcd.conf
