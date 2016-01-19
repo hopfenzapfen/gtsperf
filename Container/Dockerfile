@@ -31,7 +31,7 @@ ADD scripts/iperf.sh ${dir}/iperf.sh
 CMD ["/bin/bash", "${dir}/netperf.sh"]
 CMD ["/bin/bash", "${dir}/iperf.sh"]
 
-VOLUME ["/data"]
+VOLUME ["/root"]
 STOPSIGNAL SIGKILL
 
 # Expose the default ports, statically linked (iperf, iperf3, netperf)
