@@ -41,5 +41,5 @@ RUN chmod +x perf.sh
 CMD ./perf.sh
 #STOPSIGNAL SIGKILL
 
-# Expose the default ports, statically linked (iperf, iperf3, netperf)
-EXPOSE 5001:5001 5201:5201 12865:12865
+# Expose the default ports, statically linked (iperf TCP/UDP, iperf3, netperf)
+EXPOSE 5001:5001 5002:5002 5201:5201 12865:12865

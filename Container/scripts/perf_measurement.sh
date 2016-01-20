@@ -1,21 +1,13 @@
 #!/bin/bash
-# This script reads ENV variables set by the Dockerfile by default. To 
-# override this behaviour, specify variables with docker run -e "VAR=value". 
- 
-# docker run $IMAGE_ID -e "MODE=client" -e "TEST=iperf" -e "TYPE=UDP" -e "MODE=client" -e "SRC_SITE=AMS" -e "DST_SITE=PRG" -e "ADDRESS=192.168.1.1" -e "OVERLAY=none"
+# This script reads ENV variables set by the Dockerfile by default. To
+# override this behaviour, specify variables with docker run -e "VAR=value".
+# Examples:
+# docker run -e MODE="CLIENT" -e TEST="IPERF" -e TYPE="UDP" -e SRCSITE="AMS" -e DSTSITE="PRG" -e ADDRESS="172.17.0.2" -e OVERLAY="NONE" -v /data 18c2d4864eb3
+# docker run -e MODE="SERVER" $IMAGE_ID
 
-MODE=client
-TEST=netperf
-TYPE=TCP
-SRCSITE=ams
-DSTSITE=lju
-ADDRESS=145.100.102.137
-OVERLAY=BM
-
-
-if [[ $MODE =~ ^(client|CLIENT)$ ]]; then
+if [[ $MODE == "CLIENT" ]]; then
 	# netperf measurement
-	if [[ $TEST =~ ^(NETPERF|netperf)$ ]]; then
+	if [[ $TEST == "NETPERF" ]]; then
 		# Generate timestamp (start)
 		psstart=$(date +%Y%m%d%H%M%S)
 
@@ -26,37 +18,24 @@ if [[ $MODE =~ ^(client|CLIENT)$ ]]; then
 		psend=$(date +%Y%m%d%H%M%S)
 
 		# Write log to file
-		echo $psstart","$psend","$OVERLAY","$SRC_SITE","$DST_SITE","$psresult >> "MSMT_"$SRCSITE"_"$DSTSITE"_"$TEST"_"$OVERLAY".csv"
+		echo $psstart","$psend","$OVERLAY","$SRCSITE","$DSTSITE","$psresult >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$OVERLAY'.csv'
 
-	elif [[ $TEST =~ ^(IPERF|iperf)$ ]]; then
-		# Differentiate between TCP and UDP bandwith test 
-		if [[ $TYPE =~ ^(UDP|udp)$ ]]; then
+	elif [[ $TEST == "IPERF" ]]; then
+		# Differentiate between TCP and UDP bandwith test
+		if [[ $TYPE == "UDP" ]]; then
 			# Run performance measurement & write to CSV
-			iperf -c $ADDRESS -u -b 1000M -y C >> ./MSMT_$SRC_SITE_$DST_SITE_$TEST_$TYPE_$OVERLAY.csv
-		else
+			iperf -c $ADDRESS -u -p 5002 -b 1000M -y C | tail -n 1 >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$TYPE'_'$OVERLAY'.csv'
+
+		elif [[ $TYPE == "TCP" ]]; then
 			# Run performance measurement & write to CSV
-			iperf -c $ADDRESS -y C >> ./MSMT_$SRC_SITE_$DST_SITE_$TEST_$TYPE_$OVERLAY.csv
+			iperf -c $ADDRESS -p 5001 -y C  >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$TYPE'_'$OVERLAY'.csv'
 		fi
-	else
-		exit
 	fi
 
 else
-	if [[ $TEST =~ ^(NETPERF|netperf)$ ]]; then
-		netserver
-	else
-		if [[ $TYPE =~ ^(UDP|udp)$ ]]; then
-			# Run server as daemon in UDP mode
-			error=$(iperf -s -D -u)
-			echo $error
-		else
-			# Run server as daemon in TCP mode (default)
-			iperf -s -D
-		fi
-	fi
+    # Enter server condition if the $MODE =! client
+	netserver
+	# Run server as daemon mode
+	iperf -s -D -p 5001
+	iperf -s -u -p 5002
 fi
-
-
-while :; do
- yes
-done
