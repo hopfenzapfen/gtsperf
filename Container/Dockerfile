@@ -24,14 +24,11 @@ RUN cd netperf-2.7.0 && ./configure --enable-demo=yes && make && make install &&
 RUN mv -t /usr/bin netperf-2.7.0/src/netperf netperf-2.7.0/src/netserver && rm -rf netperf-2.7.0/
 
 # Include netperf and iperf scripts
-ADD scripts/netperf.sh ${dir}/netperf.sh
-ADD scripts/iperf.sh ${dir}/iperf.sh
+ADD scripts/perf_measurement.sh ${dir}/perf.sh
+RUN chmod +x perf.sh
 
 # Execute performance measurements
-CMD ["/bin/bash", "${dir}/netperf.sh"]
-CMD ["/bin/bash", "${dir}/iperf.sh"]
-
-VOLUME ["/root"]
+ENTRYPOINT ["./perf.sh"]
 STOPSIGNAL SIGKILL
 
 # Expose the default ports, statically linked (iperf, iperf3, netperf)
