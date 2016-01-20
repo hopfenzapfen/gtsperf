@@ -3,9 +3,13 @@ MAINTAINER Siem Hermans, <siem.hermans@os3.nl>
 LABEL version="1.0"
 LABEL role="Performance measurement"
 
+# Set timezone
+ENV TZ=UTC
+
 # Set correct directory
 ENV dir /root
 WORKDIR ${dir}
+
 
 # Update sources & install essential tools  
 RUN apt-get -qq update && apt-get install -yqq \
