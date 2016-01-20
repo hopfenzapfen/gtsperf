@@ -16,7 +16,6 @@ ENV ADDRESS=127.0.0.1
 ENV dir /root
 WORKDIR ${dir}
 
-
 # Update sources & install essential tools  
 RUN apt-get -qq update && apt-get install -yqq \
   wget \
