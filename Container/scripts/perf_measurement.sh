@@ -5,6 +5,9 @@
 # docker run -e MODE="CLIENT" -e TEST="IPERF" -e TYPE="UDP" -e SRCSITE="AMS" -e DSTSITE="PRG" -e ADDRESS="172.17.0.2" -e OVERLAY="NONE" -v /data 18c2d4864eb3
 # docker run -e MODE="SERVER" $IMAGE_ID
 
+# Get the IP address of the machine
+ifconfig
+
 if [[ $MODE == "CLIENT" ]]; then
 	# netperf measurement
 	if [[ $TEST == "NETPERF" ]]; then
