@@ -15,7 +15,7 @@ if [[ $MODE == "CLIENT" ]]; then
 		psstart=$(date +%Y%m%d%H%M%S)
 
 		# Run performance measurement
-		psresult=$(netperf -H $ADDRESS -t TCP_RR -- -O min_latency,mean_latency,p99_latency,stddev_latency | tail -n 1 | awk '{$1=$1}1' OFS=",")
+		psresult=$(netperf -l 115 -H $ADDRESS -t TCP_RR -- -O min_latency,mean_latency,p99_latency,stddev_latency | tail -n 1 | awk '{$1=$1}1' OFS=",")
 
 		# Generate timestamp (end)
 		psend=$(date +%Y%m%d%H%M%S)
@@ -27,11 +27,11 @@ if [[ $MODE == "CLIENT" ]]; then
 		# Differentiate between TCP and UDP bandwith test
 		if [[ $TYPE == "UDP" ]]; then
 			# Run performance measurement & write to CSV
-			iperf -c $ADDRESS -u -p 5002 -b 1000M -y C | tail -n 1 >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$TYPE'_'$OVERLAY'.csv'
+			iperf -c $ADDRESS -u -p 5002 -b 1000M -y C -t 155 | tail -n 1 >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$TYPE'_'$OVERLAY'.csv'
 
 		elif [[ $TYPE == "TCP" ]]; then
 			# Run performance measurement & write to CSV
-			iperf -c $ADDRESS -p 5001 -y C  >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$TYPE'_'$OVERLAY'.csv'
+			iperf -c $ADDRESS -p 5001 -y C -t 155 >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$TYPE'_'$OVERLAY'.csv'
 		fi
 	fi
 
