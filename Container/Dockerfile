@@ -21,8 +21,7 @@ WORKDIR ${dir}
 RUN apt-get -qq update && apt-get install -yqq \
   wget \
   build-essential \
-  git \
-  iperf
+  git
 
 # Pull and build testing tools (iperf3 & netperf)
 RUN wget --no-check-certificate https://iperf.fr/download/iperf_3.0/iperf3_3.0.11-1_amd64.deb https://iperf.fr/download/iperf_3.0/libiperf0_3.0.11-1_amd64.deb
