@@ -24,14 +24,25 @@ RUN apt-get -qq update && apt-get install -yqq \
   git \
   iperf
 
-# Pull and build testing tools (iperf & netperf)
+# Pull and build testing tools (iperf3 & netperf)
 RUN wget --no-check-certificate https://iperf.fr/download/iperf_3.0/iperf3_3.0.11-1_amd64.deb https://iperf.fr/download/iperf_3.0/libiperf0_3.0.11-1_amd64.deb
 RUN dpkg -i libiperf0_3.0.11-1_amd64.deb iperf3_3.0.11-1_amd64.deb && rm libiperf0_3.0.11-1_amd64.deb iperf3_3.0.11-1_amd64.deb
 RUN wget --no-check-certificate ftp://ftp.netperf.org/netperf/netperf-2.7.0.tar.gz && tar -xzvf netperf-2.7.0.tar.gz
 RUN cd netperf-2.7.0 && ./configure --enable-demo=yes && make && make install && rm ../netperf-2.7.0.tar.gz
 
-# Install binaries and clean up directories
+# Install netperf binaries and clean up directories
 RUN mv -t /usr/bin netperf-2.7.0/src/netperf netperf-2.7.0/src/netserver && rm -rf netperf-2.7.0/
+
+# Install iperf (2)
+WORKDIR ${dir}
+RUN wget --no-check-certificate http://heanet.dl.sourceforge.net/project/iperf/iperf-2.0.5.tar.gz 
+RUN tar -xzvf iperf-2.0.5.tar.gz && cd iperf-2.0.5/src
+
+# Patch iperf 2.0.5 in order to fix the 100% utilization bug when running iperf as a daemon
+ADD scripts/nomaxcpu.patch ${dir}/iperf-2.0.5/src/nomaxcpu.patch
+WORKDIR ${dir}/iperf-2.0.5/src/
+patch < nomaxcpu.patch && cd ..
+./configure && make && make install && cp src/iperf /usr/bin/iperf
 
 # Include netperf and iperf scripts
 ADD scripts/perf_measurement.sh ${dir}/perf.sh
