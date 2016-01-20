@@ -11,8 +11,11 @@ LABEL role="Performance measurement"
 # Set timezone
 ENV TZ=UTC
 
-# Default to server mode
+# Default to server mode with iperf TCP test
 ENV MODE=server
+ENV TYPE=TCP
+ENV TEST=iperf
+ENV OVERLAY=none
 
 # Set address to measure, default to localhost
 ENV ADDRESS=127.0.0.1
