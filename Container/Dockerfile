@@ -6,6 +6,12 @@ LABEL role="Performance measurement"
 # Set timezone
 ENV TZ=UTC
 
+# Default to server mode
+ENV MODE=server
+
+# Set address to measure, default to localhost
+ENV ADDRESS=127.0.0.1
+
 # Set correct directory
 ENV dir /root
 WORKDIR ${dir}
