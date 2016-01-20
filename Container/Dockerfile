@@ -41,10 +41,11 @@ RUN tar -xzvf iperf-2.0.5.tar.gz && cd iperf-2.0.5/src
 # Patch iperf 2.0.5 in order to fix the 100% utilization bug when running iperf as a daemon
 ADD scripts/nomaxcpu.patch ${dir}/iperf-2.0.5/src/nomaxcpu.patch
 WORKDIR ${dir}/iperf-2.0.5/src/
-patch < nomaxcpu.patch && cd ..
-./configure && make && make install && cp src/iperf /usr/bin/iperf
+RUN patch < nomaxcpu.patch
+RUN cd .. && ./configure && make && make install && cp src/iperf /usr/bin/iperf
 
 # Include netperf and iperf scripts
+WORKDIR ${dir}
 ADD scripts/perf_measurement.sh ${dir}/perf.sh
 RUN chmod +x perf.sh
 
