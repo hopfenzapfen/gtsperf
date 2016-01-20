@@ -1,3 +1,8 @@
+# In order to write the logs to a file on the host, the container should be started as 
+# 'docker run --name perf_meas -v /data $IMAGE_ID'. The $IMAGE_ID is the ID of the image
+# built with this Dockerfile. To view the logs, the following command should be run
+# docker inspect -f '{{range .Mounts}}{{.Source}}{{end}}' $CONTAINER_NAME .
+
 FROM ubuntu:14.04
 MAINTAINER Siem Hermans, <siem.hermans@os3.nl>
 LABEL version="1.0"
