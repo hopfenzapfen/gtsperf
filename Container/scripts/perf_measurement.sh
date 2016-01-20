@@ -4,6 +4,15 @@
  
 # docker run $IMAGE_ID -e "MODE=client" -e "TEST=iperf" -e "TYPE=UDP" -e "MODE=client" -e "SRC_SITE=AMS" -e "DST_SITE=PRG" -e "ADDRESS=192.168.1.1" -e "OVERLAY=none"
 
+MODE=client
+TEST=netperf
+TYPE=TCP
+SRCSITE=ams
+DSTSITE=lju
+ADDRESS=145.100.102.137
+OVERLAY=BM
+
+
 if [[ $MODE =~ ^(client|CLIENT)$ ]]; then
 	# netperf measurement
 	if [[ $TEST =~ ^(NETPERF|netperf)$ ]]; then
@@ -17,16 +26,16 @@ if [[ $MODE =~ ^(client|CLIENT)$ ]]; then
 		psend=$(date +%Y%m%d%H%M%S)
 
 		# Write log to file
-		echo $psstart","$psend",$SRC_SITE,$DST_SITE," $psresult >> MSMT_$SRC_SITE_$DST_SITE_$TEST_$OVERLAY.csv
+		echo $psstart","$psend","$OVERLAY","$SRC_SITE","$DST_SITE","$psresult >> "MSMT_"$SRCSITE"_"$DSTSITE"_"$TEST"_"$OVERLAY".csv"
 
 	elif [[ $TEST =~ ^(IPERF|iperf)$ ]]; then
 		# Differentiate between TCP and UDP bandwith test 
 		if [[ $TYPE =~ ^(UDP|udp)$ ]]; then
 			# Run performance measurement & write to CSV
-			iperf -c -u $ADDRESS -b 0 -y C >> /data/MSMT_$SRC_SITE_$DST_SITE_$TEST_$TYPE_$OVERLAY.csv
+			iperf -c $ADDRESS -u -b 1000M -y C >> ./MSMT_$SRC_SITE_$DST_SITE_$TEST_$TYPE_$OVERLAY.csv
 		else
 			# Run performance measurement & write to CSV
-			iperf -c $ADDRESS -y C >> /data/MSMT_$SRC_SITE_$DST_SITE_$TEST_$TYPE_$OVERLAY.csv
+			iperf -c $ADDRESS -y C >> ./MSMT_$SRC_SITE_$DST_SITE_$TEST_$TYPE_$OVERLAY.csv
 		fi
 	else
 		exit
@@ -38,13 +47,16 @@ else
 	else
 		if [[ $TYPE =~ ^(UDP|udp)$ ]]; then
 			# Run server as daemon in UDP mode
-			iperf -s -D -u
+			error=$(iperf -s -D -u)
+			echo $error
 		else
 			# Run server as daemon in TCP mode (default)
 			iperf -s -D
-		fi 
+		fi
 	fi
 fi
 
 
-
+while :; do
+ yes
+done

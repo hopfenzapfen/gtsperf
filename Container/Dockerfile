@@ -12,13 +12,6 @@ LABEL role="Performance measurement"
 ENV TZ=UTC
 
 # Default to server mode with iperf TCP test
-ENV MODE=server
-ENV TYPE=TCP
-ENV TEST=iperf
-ENV OVERLAY=none
-
-# Set address to measure, default to localhost
-ENV ADDRESS=127.0.0.1
 
 # Set correct directory
 ENV dir /root
@@ -45,8 +38,8 @@ ADD scripts/perf_measurement.sh ${dir}/perf.sh
 RUN chmod +x perf.sh
 
 # Execute performance measurements
-ENTRYPOINT ["./perf.sh"]
-STOPSIGNAL SIGKILL
+CMD ./perf.sh
+#STOPSIGNAL SIGKILL
 
 # Expose the default ports, statically linked (iperf, iperf3, netperf)
 EXPOSE 5001:5001 5201:5201 12865:12865
