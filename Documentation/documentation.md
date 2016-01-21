@@ -1,4 +1,4 @@
-### Docker
+# Docker
 ## Project
 It has a single binary, docker, that can act as both client and server. As a client, the docker binary passes requests to the Docker daemon (e.g., asking it to return information about itself), and then processes those requests when they are returned. 
 
@@ -16,7 +16,7 @@ You can think about images as the building or packing aspect of Docker and the c
 
 As a result of each step being committed as an image, Docker is able to be really clever about building images. It will treat previous layers as a cache. If, in our debugging example, we did not need to change anything in Steps 1 to 3, then Docker would use the previously built images as a cache and a starting point. Essentially, it'd start the build process straight from Step 4. This can save you a lot of time when building images if a previous step has not changed. If, however, you did change something in Steps 1 to 3, then Docker would restart from the first changed instruction.
 
-### Overlays
+# Overlays
 ## Distributed microservices //Components
 Machine lets you create Docker hosts on your computer, on cloud providers, and inside your own data center. It creates servers, installs Docker on them, then configures the Docker client to talk to them.
 
@@ -29,7 +29,7 @@ Docker’s networking code has now been included in a separate library called �
 
 Libnetwork implements the Container Network Model (CNM) which relies on three main components. The sandbox, endpoints and networks. A Sandbox contains the configuration of a container's network stack. A Sandbox can have multiple endpoints attached to different networks. This includes management of the container's interfaces, routing table and DNS settings. A Sandbox may contain many endpoints from multiple networks. An Endpoint joins a Sandbox to a Network. An implementation of an Endpoint could be a veth pair, an Open vSwitch internal port or similar. An Endpoint can belong to only one network but may only belong to one Sandbox. A Network is a group of Endpoints that are able to communicate with each-other directly. An implementation of a Network could be a Linux bridge, a VLAN, etc. Networks consist of many endpoints. The goal of libnetwork is to deliver a robust Container Network Model that provides a consistent programming interface and the required network abstractions for applications. CNM is a generic model that does not only apply to Docker but can also be implemented in more traditional container projects like OpenVZ and LXC. The libnetwork APIs function as a common API for the plugins. 
 
-By employing a model, libnetwork functions as a common ground for other overlay solutions. There are many networking solutions available to suit a broad range of use-cases. libnetwork uses a driver / plugin model to support all of these solutions while abstracting the complexity of the driver implementations by exposing a simple and consistent Network Model to users.
+By employing a model, libnetwork functions as a common ground for other overlay solutions. This way the company tried to move away from the “all or nothing” monolith.  Customers do want to select implementations for services, and plug them into Docker. The APIs are not there yet to support this and they need to be.  It’s that simple. There are many networking solutions available to suit a broad range of use-cases. libnetwork uses a driver / plugin model to support all of these solutions while abstracting the complexity of the driver implementations by exposing a simple and consistent Network Model to users. 
 
 The network is managed by the CNM NetworkController object which exposes an API into libnetwork which allows (for example) Docker Engine to allocate and manage Networks. In essence NetworkController allows user to bind a particular driver to a given network. The Endpoint object provides the connectivity for services exposed by a container in a network with other services provided by other containers in the network.
 
@@ -43,6 +43,30 @@ Multi-host networking uses a pluggable Key-Value store backend to distribute sta
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 The Weave plugin runs automatically when you weave launch, provided your Docker daemon is version 1.9 or newer.
 
 
@@ -50,21 +74,7 @@ As for libnetwork plugin for flannel, we may pursue this direction as well. Core
 
 
 
-
-
-
-
-
-
- 
-
 It is advisable to name each individual container. This makes inspecting the log output easier.
-
- docker create command which creates a container but does not run it.
-
- sudo docker stats
-
- We call it the Ubuntu operating system, but really it is not the full operating system. It's a very cut-down version with the bare runtime required to run the distribution.
 
  Each image is being listed by the tags applied to it, so, for example, 12.04, 12.10, quantal, or precise and so on. Each tag marks together a series of image layers that represent a specific image (e.g., the 12.04 tag collects together all the layers of the Ubuntu 12.04 image). This allows us to store more than one image inside a repository.
 
@@ -237,11 +247,11 @@ http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/enhanced-networking.html
 
 Intro
 -----
-Containers can be moved between hosts without requiring any reconfiguration or, in many cases, restarts of other containers. All that is required is for the migrated container to be started with the same IP address as it was given originally.
+Traditional virtual machines are generally relatively large and impractical to store or transfer to different hosts. Furthermore, running VMs consume a significant amount of CPU and memory. Unlike traditional virtualization, containerization takes place at the kernel level. Containerization primitives for example are OpenVZ, LXC, Solaris zones and BSD Jails. Docker builds on top of these low-level primitives to offer developers a portable format and runtime environment. 
 
-Docker announced their acquisition of Socketplane, a start-up company working on software defined networking for Docker. This way the company tried to move away from the “all or nothing” monolith.  Customers do want to select implementations for services, and plug them into Docker. The APIs are not there yet to support this and they need to be.  It’s that simple.  We have all got to make this work. Courtesy of Socketplane.
+Containers can be moved between hosts without requiring any reconfiguration or, in many cases, restarts of other containers. All that is required is for the migrated container to be started with the same IP address as it was given originally. Overlays allow for support for an “application centric” model in which any developer can create as many networks as they need – easily. 
 
-Overlays allow for support for an “application centric” model in which any developer can create as many networks as they need – easily. 
+
 
 Reasons for using Containers over Virtual Machines: https://github.com/ClusterHQ/docker-plugins
 
