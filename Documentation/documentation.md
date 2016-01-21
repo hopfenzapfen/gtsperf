@@ -1,65 +1,64 @@
-When SocketPlane joined the Docker team, the development of libnetwork was kickstarted. As of version 1.9 Libnetwork comes out of experimental and into the main release. Docker’s networking code has been factored out into its own library called “libnetwork”. The idea of libnetwork is to codify the networking requirements for containers into a model, and provide an API and command-line tool based on that model. The premise of the libnetwork model is that containers can be joined to networks; the containers on a network can all communicate over that network.
+### Docker
+## Project
+It has a single binary, docker, that can act as both client and server. As a client, the docker binary passes requests to the Docker daemon (e.g., asking it to return information about itself), and then processes those requests when they are returned. 
 
-Modularity is an important factor. Mainly aimed towards developers and speeding up DevOPS, bringing up connected containers becomes easy and combining components into microservices becomes much easier.
+## Containers
+AUTHOR defines containres as follows: A Docker container is an image format that can contain a set of standard operations and can function as an execution environment. Container technology allows multiple isolated user space instances to be run on a single host.they can generally only run the same or a similar guest operating system as the underlying host. Unlike traditional virtualization or paravirtualization technologies, they do not require an emulation layer or a hypervisor layer to run and instead use the operating system's normal system call interface.
 
-A Sandbox can have multiple endpoints attached to different networks.
+They make excellent sandboxes for a variety of testing purposes. Additionally, because of their 'standard' nature, they also make excellent building blocks for services. Netowkr, process, filesystem, resource isolation are all presented in containres. The container has a network, IP address, and a bridge interface to talk to the local host including a veth pair.
 
-Libnetwork implements the Container Network Model (CNM) which relies on three main components. The sandbox, endpoints and networks. A Sandbox contains the configuration of a container's network stack. This includes management of the container's interfaces, routing table and DNS settings. A Sandbox may contain many endpoints from multiple networks. An Endpoint joins a Sandbox to a Network. An implementation of an Endpoint could be a veth pair, an Open vSwitch internal port or similar. An Endpoint can belong to only one network but may only belong to one Sandbox. A Network is a group of Endpoints that are able to communicate with each-other directly. An implementation of a Network could be a Linux bridge, a VLAN, etc. Networks consist of many endpoints.
+## Images & Dockerfiles
+You can think about images as the building or packing aspect of Docker and the containers as the running or execution aspect of Docker. The Dockerfile uses a basic DSL (Domain Specific Language) with instructions for building Docker images. We recommend the Dockerfile approach over docker commit because it provides a more repeatable, transparent, and idempotent mechanism for creating images. Each instruction adds a new layer to the image and then commits the image.
+
+ Docker runs a container from the image. An instruction executes and makes a change to the container. Docker runs the equivalent of docker commit to commit a new layer. Docker then runs a new container from this new image. The next instruction in the file is executed, and the process repeats until all instructions have been executed.
+
+[Stacked image]
+
+As a result of each step being committed as an image, Docker is able to be really clever about building images. It will treat previous layers as a cache. If, in our debugging example, we did not need to change anything in Steps 1 to 3, then Docker would use the previously built images as a cache and a starting point. Essentially, it'd start the build process straight from Step 4. This can save you a lot of time when building images if a previous step has not changed. If, however, you did change something in Steps 1 to 3, then Docker would restart from the first changed instruction.
+
+### Overlays
+## Distributed microservices //Components
+Machine lets you create Docker hosts on your computer, on cloud providers, and inside your own data center. It creates servers, installs Docker on them, then configures the Docker client to talk to them.
+
+## Libnetwork
+Docker was originally developed to improve the application development process. Docker allows developers to build an entire multi-tier application on a single Linux workstation without the complexity or overhead of multiple operating system images, as is the case with traditional virtualization. To accommodate the network requirements of this type of environment, Docker leverages simple network architecture.
+
+As of version 1.9 of Docker, libnetwork is included in the main release of the project. This innovation was kickstarted when Docker acquired the SocketPlane team in March 2015. SocketPlane was one of the many available Software-Defined Networking solutions for containers on the market. Instead of connecting to a virtual bridge, each container would connect to an Open vSwitch (OVS) port. Container hosts with OVS running can form a virtual network overlay that would carry traffic destined for any container connected to the network. Containers seamlessly communicate with each other wherever they are – thus enabling true distributed applications. LibNetwork treats Network object at an abstract level to provide connectivity between a group of end-points that belong to the same network and isolate from the rest.
+
+Docker’s networking code has now been included in a separate library called “libnetwork”. The idea of libnetwork is to codify the networking requirements for containers into a model, and provide an API and command-line tool based on that model. The premise of the libnetwork model is that containers can be joined to networks; the containers on a network can all communicate over that network. Modularity is an important factor. Speeding up DevOPS, bringing up connected containers becomes easy and combining components into microservices becomes much easier.
+
+Libnetwork implements the Container Network Model (CNM) which relies on three main components. The sandbox, endpoints and networks. A Sandbox contains the configuration of a container's network stack. A Sandbox can have multiple endpoints attached to different networks. This includes management of the container's interfaces, routing table and DNS settings. A Sandbox may contain many endpoints from multiple networks. An Endpoint joins a Sandbox to a Network. An implementation of an Endpoint could be a veth pair, an Open vSwitch internal port or similar. An Endpoint can belong to only one network but may only belong to one Sandbox. A Network is a group of Endpoints that are able to communicate with each-other directly. An implementation of a Network could be a Linux bridge, a VLAN, etc. Networks consist of many endpoints. The goal of libnetwork is to deliver a robust Container Network Model that provides a consistent programming interface and the required network abstractions for applications. CNM is a generic model that does not only apply to Docker but can also be implemented in more traditional container projects like OpenVZ and LXC. The libnetwork APIs function as a common API for the plugins. 
+
+By employing a model, libnetwork functions as a common ground for other overlay solutions. There are many networking solutions available to suit a broad range of use-cases. libnetwork uses a driver / plugin model to support all of these solutions while abstracting the complexity of the driver implementations by exposing a simple and consistent Network Model to users.
 
 The network is managed by the CNM NetworkController object which exposes an API into libnetwork which allows (for example) Docker Engine to allocate and manage Networks. In essence NetworkController allows user to bind a particular driver to a given network. The Endpoint object provides the connectivity for services exposed by a container in a network with other services provided by other containers in the network.
 
-The driver is the most abstract component of libnetwork and is not an user visible object. Drivers provide the actual implementation that makes the network work. The NetworkController however provides an API to configure the driver with specific options. Drivers can be both inbuilt (such as Bridge, Host, None & overlay) and remote (from plugin providers) to satisfy various usecases & deployment scenarios.
+The driver is the most abstract component of libnetwork and is not an user visible object. Drivers provide the actual implementation that makes the network work. The NetworkController however provides an API to configure the driver with specific options. Drivers can be both inbuilt (such as Bridge, Host, None & overlay) and remote (from plugin providers) to satisfy various usecases & deployment scenarios. Drivers registers with NetworkController. Build-in drivers registers inside of LibNetwork, while remote Drivers registers with LibNetwork via Plugin mechanism. (plugin-mechanism is WIP). Each driver handles a particular networkType.
 
-Drivers registers with NetworkController. Build-in drivers registers inside of LibNetwork, while remote Drivers registers with LibNetwork via Plugin mechanism. (plugin-mechanism is WIP). Each driver handles a particular networkType.
+The most commonly used driver is the 'bridge' driver. The bridge driver is an implementation that uses Linux Bridging and iptables to provide connectivity for containers It creates a single bridge, called docker0 by default, and attaches a veth pair between the bridge and every endpoint. This driver is discussed in detail in [LINK]. The overlay driver implements networking that can span multiple hosts using overlay network encapsulations such as VXLAN. 
 
-Containers seamlessly communicate with each other wherever they are – thus enabling true distributed applications. LibNetwork treats Network object at an abstract level to provide connectivity between a group of end-points that belong to the same network and isolate from the rest.
-
-The goal of libnetwork is to deliver a robust Container Network Model that provides a consistent programming interface and the required network abstractions for applications.
-
-There are many networking solutions available to suit a broad range of use-cases. libnetwork uses a driver / plugin model to support all of these solutions while abstracting the complexity of the driver implementations by exposing a simple and consistent Network Model to users.
-
-
-CNM is a generic model that does not only apply to Docker but can also be implemented in more traditional container projects like OpenVZ and LXC. The libnetwork APIs function as a common API for the plugins. 
-
-The bridge driver is an implementation that uses Linux Bridging and iptables to provide connectivity for containers It creates a single bridge, called docker0 by default, and attaches a veth pair between the bridge and every endpoint.
-
-The null driver is a noop implementation of the driver API, used only in cases where no networking is desired. This is to provide backward compatibility to the Docker's --net=none option. For example when there is no integration with a third party overlay solution and when the solution does all the networking. 
-
-Using the built-in overlay driver requires a kernel version of 3.16 or higher. 
-https://github.com/docker/libnetwork/blob/master/docs/overlay.md
-
-The overlay driver implements networking that can span multiple hosts using overlay network encapsulations such as VXLAN. For more details on its design, please see the Overlay Driver Design.
-
+## Key-Value stores
 Multi-host networking uses a pluggable Key-Value store backend to distribute states using libkv. libkv supports multiple pluggable backends such as consul, etcd & zookeeper (more to come).
+
+
+
 
 The Weave plugin runs automatically when you weave launch, provided your Docker daemon is version 1.9 or newer.
 
 
 As for libnetwork plugin for flannel, we may pursue this direction as well. CoreOS is committed to Docker being one of the container options on our system so flannel will continue to work with it. It might be via a plugin or the way it is currently done (via --bip argument to Docker daemon).
 
-Container technology allows multiple isolated user space instances to be run on a single host.they can generally only run the same or a similar guest operating system as the underlying host. Unlike traditional virtualization or paravirtualization technologies, they do not require an emulation layer or a hypervisor layer to run and instead use the operating system's normal system call interface.
 
-You can think about images as the building or packing aspect of Docker and the containers as the running or execution aspect of Docker.
 
-A Docker container is:
 
-An image format.
-A set of standard operations.
-An execution environment.
 
-they make excellent sandboxes for a variety of testing purposes. Additionally, because of their 'standard' nature, they also make excellent building blocks for services. Netowkr, process, filesystem, resource isolation are all presented in containres.
 
-/etc/default/ufw
-DEFAULT_FORWARD_POLICY="ACCEPT"
-sudo ufw reload
 
-Optionally create docker gruop
 
-It has a single binary, docker, that can act as both client and server. As a client, the docker binary passes requests to the Docker daemon (e.g., asking it to return information about itself), and then processes those requests when they are returned.
 
- The container has a network, IP address, and a bridge interface to talk to the local host including a veth pair.
+ 
 
- Add name to container in production environment
+It is advisable to name each individual container. This makes inspecting the log output easier.
 
  docker create command which creates a container but does not run it.
 
@@ -71,43 +70,26 @@ It has a single binary, docker, that can act as both client and server. As a cli
 
  There are two types of repositories: user repositories, which contain images contributed by Docker users, and top-level repositories, which are controlled by the people behind Docker.
 
- The Dockerfile uses a basic DSL (Domain Specific Language) with instructions for building Docker images. We recommend the Dockerfile approach over docker commit because it provides a more repeatable, transparent, and idempotent mechanism for creating images. Each instruction adds a new layer to the image and then commits the image.
 
- Docker runs a container from the image.
-An instruction executes and makes a change to the container.
-Docker runs the equivalent of docker commit to commit a new layer.
-Docker then runs a new container from this new image.
-The next instruction in the file is executed, and the process repeats until all instructions have been executed.
 
 You can expose ports at run time with the docker run command with the --expose option. You can also specify a Git repository as a source for the Dockerfile as we can see here:
 
 repository/name:tag
 jamtur01/static_web:v1
 
-As a result of each step being committed as an image, Docker is able to be really clever about building images. It will treat previous layers as a cache. If, in our debugging example, we did not need to change anything in Steps 1 to 3, then Docker would use the previously built images as a cache and a starting point. Essentially, it'd start the build process straight from Step 4. This can save you a lot of time when building images if a previous step has not changed. If, however, you did change something in Steps 1 to 3, then Docker would restart from the first changed instruction.
+
 
 
 WEAVEMESH
 WEAVE
 
+Important to mention is that libnetwork requires a kernel version of at least 3.16 to function. 
 
 Install kernel version 3.19 for multi-host networks:
 sudo apt-get install linux-generic-lts-vivid
 sudo reboot
 In order to support overlay networks
 
-Docker-Engine
--------------
-sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
-sudo echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list
-sudo apt-get update && sudo apt-get install docker-engine
-
-Docker-Machine
---------------
-curl -L https://github.com/docker/machine/releases/download/v0.5.3/docker-machine_linux-amd64 >/usr/local/bin/docker-machine
-chmod +x /usr/local/bin/docker-machine
-
-Machine lets you create Docker hosts on your computer, on cloud providers, and inside your own data center. It creates servers, installs Docker on them, then configures the Docker client to talk to them.
 
 docker-machine create --driver 'generic' --generic-ip-address 127.0.0.1 weave-1 --generic-ssh-key
 
@@ -139,8 +121,6 @@ https://www.netdev01.org/docs/Networking%20in%20Containers%20and%20Container%20C
 Describe components
 
 Docker has issued the 1.9 release of its container platform, which includes a way for containers to discover and link to each other. It's a big step toward reorganizing applications as sets of micro-services, each service having its own container, its own address, and its own ability to be upgraded as needed. The micro-service can move and its address will move with it, re-establishing its presence in a new location through the discovery mechanism built into Release 1.9.
-
-The ability to network multiple containers to multiple hosts came about through Docker's acquisition of SocketPlane in March
 
 They could see that containers were very different from virtual machines," Johnston said. Virtual machines are managed like physical servers that happen to exist in software. They're stood up and run continuously for months. Containers, on the other hand, may be activated, used for a single task, and then sent away in a matter of a few minutes.
 
