@@ -21,3 +21,8 @@ Footnote: All sources are available at
 
 [SOURCE] http://services.geant.net/GTS/Resources/Documents/D6-2_D2-3-2_TaaS_v2%200.pdf
 [SOURCE] http://services.geant.net/GTS/Resources/PublishingImages/Pages/Home/User_Guide_v2.0.pdf
+
+
+The initial topology used during the project was a meshed environment in a single site. With this setup 
+
+The initial setup was a full mesh becaues 
