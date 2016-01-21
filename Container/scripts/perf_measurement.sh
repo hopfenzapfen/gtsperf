@@ -27,11 +27,11 @@ if [[ $MODE == "CLIENT" ]]; then
 		# Differentiate between TCP and UDP bandwith test
 		if [[ $TYPE == "UDP" ]]; then
 			# Run performance measurement & write to CSV
-			iperf -c $ADDRESS -u -p 5002 -b 1000M -y C -t 155 | tail -n 1 >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$TYPE'_'$OVERLAY'.csv'
+			iperf -c $ADDRESS -u -p 5002 -b 1000M -y C -t 115 | tail -n 1 >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$TYPE'_'$OVERLAY'.csv'
 
 		elif [[ $TYPE == "TCP" ]]; then
 			# Run performance measurement & write to CSV
-			iperf -c $ADDRESS -p 5001 -y C -t 155 >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$TYPE'_'$OVERLAY'.csv'
+			iperf -c $ADDRESS -p 5001 -y C -t 115 >> /data/'MSMT_'$SRCSITE'_'$DSTSITE'_'$TEST'_'$TYPE'_'$OVERLAY'.csv'
 		fi
 	fi
 
