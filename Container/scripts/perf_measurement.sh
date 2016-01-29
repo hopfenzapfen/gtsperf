@@ -15,7 +15,7 @@ if [[ $MODE == "CLIENT" ]]; then
 		psstart=$(date +%Y%m%d%H%M%S)
 
 		# Run performance measurement
-		psresult=$(netperf -l 115 -H $ADDRESS -t TCP_RR -- -O min_latency,mean_latency,p99_latency,stddev_latency | tail -n 1 | awk '{$1=$1}1' OFS=",")
+		psresult=$(netperf -l 115 -H $ADDRESS -t UDP_RR -- -O min_latency,mean_latency,p99_latency,stddev_latency | tail -n 1 | awk '{$1=$1}1' OFS=",")
 
 		# Generate timestamp (end)
 		psend=$(date +%Y%m%d%H%M%S)
