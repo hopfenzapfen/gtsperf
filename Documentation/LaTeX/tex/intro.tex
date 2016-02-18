@@ -1,0 +1,27 @@
+\section{Introduction} \label{intro}
+Containers, and more specifically Linux containers, have been around for years. Historically, they have been relatively complex to deploy and interconnect on a large scale, which inherently meant that the overall adoption rate has been limited. With the introduction of Docker, the popularity of deploying applications in containers has drastically increased. Docker provides a relatively easy way to to build, ship, and run distributed applications in a uniform and portable manner. An increasing amount of companies have started adopting Docker as an alternative or as a complement to virtualization at a remarkable rate \cite{stackengine_2015}. In contrast with traditional virtualization hypervisors, containers share the operating system with the host machine, which results in a lower overhead, allowing for more containers, and as such, more applications to be deployed. 
+
+The increasing popularity of containerizing applications sparks the need to connect application containers together in order to create (\textit{globally}) distributed microservices. Up until recently this has been a problematic affair as multi-host networking was not natively supported by Docker. However, with the recent introduction of \texttt{libnetwork}, a standardized networking library for containers, Docker offers out of the box support for creating overlay networks between containers whilst allowing third party overlay providers to better integrate with the containers. 
+
+The high density factor of containers and rapid deployment rate require a high performance overlay network which can harness the growing demands. However, as overlay networks are built on top of an underlay network, a performance degradation is implicit. Additionally, deploying applications in geographically dispersed containers may naturally have an adverse effect on performance. Therefore, the aim of this research project is to answer the following main research question:
+
+\begin{quote}
+\textit{What is the performance of various Docker overlay solutions when implemented in high latency environments and more specifically in the GÉANT Testbeds Services (GTS)?}
+\end{quote}
+
+\noindent
+Several sub-questions have been posed to support the main question:
+
+\begin{itemize}
+	\setlength\itemsep{1pt}
+    \item \textit{Which technical differences exist between the selected Docker overlay solutions?}
+    \item \textit{Do performance differences occur when a topology is scaled up in terms of locations and containers?}
+    \item \textit{What is the relative performance difference between containers connected through the native \texttt{libnetwork} overlay driver and various third party overlay solutions?}
+\end{itemize}
+
+\noindent
+The scope of this research is limited by exclusively examining the performance of the native overlay driver and third party solutions Calico, Flannel and Weave. These solutions currently prove to have the most commercial and community backing and are most likely to be deployed in production environments. Lastly, since performance is not the ultimate metric for defining the quality of a solution, the operational flexibility of the technologies is discussed. 
+
+In order to execute performance measurements in a realistic setting, which resembles a network distributed over the internet, the GÉANT Testbeds Service (GTS) has been utilized. This service offers the ability to create experimental networks at scale, geographically dispersed over five European cities. During the course of this project, high latency is defined as a connection with a latency between 10 and 100 milliseconds round trip time. These latencies aim to represent a geographically dispersed environment within Europe. 
+\\\\
+The rest of the paper is organized as follows. We present the related work in Section \ref{related}, where we provide a brief summary of existing performance evaluations and measurement methodologies. In Section \ref{background} we briefly explain core concepts regarding Docker, \texttt{libnetwork} in general and the selected overlay solutions. The two-part methodology for measuring the performance of the overlay solutions is presented in Section \ref{methodology}. A distinction is made between synthetic benchmarks and a real world scenario. The results, discussion and conclusion are presented in Section \ref{results}, Section \ref{discussion} and Section \ref{conclusion} respectively. 

@@ -1,0 +1,162 @@
+\section{Methodology} \label{methodology}
+In order to evaluate the performance implications of geographic dispersion on the overlay solutions, a high latency simulation environment is required. As previously discussed in section \ref{gts_sec}, we have utilized the GÉANT Testbeds Service for this purpose. Within this service, entire topologies can be created using a domain-specific language (DSL) which follows a JSON formatting. The DSL description defines the structure of the topology and the properties of each requested resource, i.e. the required attributes of the resource. The deployment application programming interface (API) hooks into GÉANT's OpenStack environment and provisions the underlying technologies based on the provided DSL file. Listing \ref{dslexample} presents a snippet of a basic point-to-point topology in GTS. 
+\\
+\begin{lstlisting}[caption={DSL example illustrating a simple host resource definition},label=dslexample]
+FullMesh {
+	id="FullMesh_Dispersed"
+	host { id="h1" location="AMS" port {id="port11"} port {id="port12"} }
+	link { id="l1" port {id="src"} port {id="dst"} }
+	adjacency h1.port14, l1.src
+	adjacency h2.port24, l1.dst
+} {...}
+\end{lstlisting}
+
+In order to form an adjacency between hosts, links have to be statically defined in the JSON schema and associated with a port on the host object. During the course of the project the third version of GTS has been rolled out (v3.0.1). The new version of GTS introduced 'second generation' networks which allow for more advanced configurations and dynamic in-site modification. For example, the ability to modify an active topology without tearing down the entire existing testbed instance and the characteristics of resources can be specified in more detail. However, at the time of writing, the documentation on the newly introduced features in the DSL is not available yet. This means that our topologies in GTS are defined using the older v2.0 DSL constructs. In practice this means that the topologies are dynamically provisioned but remain static throughout their reservation. Changes in the topology require tearing down the entire testbed before reserving it again. Due to this limitation we have opted to create an as flexible as possible topology within GTS: a full mesh topology between all sites. 
+
+Using the DSL we defined the full mesh topology and deployed it to a total of four instances in GTS, one for each of the overlay solutions to be tested. A full mesh topology was primarily chosen to make measuring the performance as flexible as possible seeing as a full mesh allows for a multitude of potential test scenarios. During the course of the project we have divided the full mesh in a series of point-to-point topologies and a star topology. Due to the software-based nature of an overlay, a full mesh would be a feasible topology in a real world scenario. Lastly, a full mesh was preferable because Calico utilizes the Border Gateway routing protocol (BGP) to route traffic through the network. Due to this property the solution may potentially utilize unequal cost load balancing which would benefit from redundant paths. 
+\\ \\
+At first an instance of the full mesh topology was deployed in a single site in GTS to assess the deployment feasibility of the selected overlay solutions. The full results of this assessment are presented in Section \ref{results}. After the initial feasibility validation, the topology was scaled out to all available sites in GTS and overlay networks were created in each instance. Figure \ref{fig:gts_topology} is a visual representation of the full mesh as defined in the DSL file. Each host is directly connected via their network interfaces to all other hosts. 
+
+\begin{figure}[!ht]
+   \centering
+   \includegraphics[scale=0.64]{img/mesh.png}
+   \caption{Full mesh topology between all sites in GTS}
+   \label{fig:gts_topology}
+\end{figure}
+
+It should be noted that during the course of the project, the virtual machines deployed in the Prague site have become unresponsive for an extensive period of time. This means that the Prague site has not been taken into consideration whilst measuring the performance, effectively reducing the topology to a four-node mesh. Additionally, because we make use of the GTS v2.0 DSL grammar, the placement of the virtual machine on a specific physical host cannot currently be controlled with the DSL and are as such, assigned by OpenStack based on available resources. This means that it is very well possible that all four nodes in Amsterdam (one per instance) are placed on the same physical host. While in Milan, each node is placed on a separate physical host. If we would run all performance measurements simultaneously, a discrepancy unrelated to the actual functioning of the overlays can be expected. To avoid this external influence, the tools will be timed and scheduled to ensure no two distinct hosts are running simultaneously. A detailed explanation of this procedure can be found in section \ref{tools}.
+
+Additionally, due to the way the virtual machines are provisioned in GTS, it is infeasible to create a fully functional meshed topology as depicted in figure \ref{fig:gts_topology} with Calico. The BIRD routing daemon, which lies at the core of Calico, refuses to import a route from the kernel if the next-hop is not in a directly connected network. This essentially means that only physically connected networks can be included in the routing table as a correct BGP route, effectively limiting the topology to a point-to-point link. A workaround in order to include the links that are not directly connected to the routing table would be to issue a route to the link and specify the route as \texttt{'onlink'}. By issuing this next hop flag (\texttt{NHFLAG}) with the \texttt{ip} command, the networking stack will pretend that the next-hop is directly attached to the given link, even if it does not match any interface prefix. The \texttt{NHFLAG} parameter essentially instructs the kernel to treat the route as a connected network. However, specifying this flag in the GTS returns that the \texttt{NHFLAG} is an invalid argument for the specified virtual interface. Moreover, whilst attempting to create a point-to-multipoint topology, forming adjacencies between the shared node failed. This means that Calico's overlay solution is limited to point-to-point topologies between sites in GTS specifically. Because Calico is not suited for all desired test cases in GTS, we have have opted to drop this solution from the performance measurements. 
+
+\subsection{Deployment considerations}
+Disregarding the local site topology, each of the deployed instances houses one of the selected overlay solutions. Due to the large amount of instances and nodes per instance, a bootstrap script has been created which handles basic machine configuration tasks and automates the deployment of Docker. Furthermore, if desired, the script also performs the installation and configuration of one of the respective third-party overlay solutions. For quick reference, all created scripts have been made available on GitHub \footnote{All configuration scripts are made available at \url{https://github.com/siemhermans/gtsperf}}. 
+
+The configuration of the overlay solutions has been kept default as much as possible. Still, some deployment specific choices have been made. Flannel for example has been configured to utilize in-kernel VXLAN to encapsulate the packets. By default Flannel used UDP encapsulation to tunnel packets between containers. Because both the native overlay driver and Weave use VXLAN out of the box, we have opted to make Flannel use VXLAN as well. This has been achieved by setting a specific value in the \texttt{etcd} store. 
+
+\begin{lstlisting}[caption={Configuring Flannel to use VXLAN instead of UDP tunneling},label=flantun]
+etcdctl set /coreos.com/network//config  '{ 
+	"Network": "10.1.0.0/16", "Backend": { 
+    	"Type": "vxlan"
+    } 
+}'
+\end{lstlisting}
+
+Regarding the key-value store, both Flannel and the native Overlay driver require a dedicated key-value store to hold information about the network state. As Flannel is a product of CoreOS, this overlay natively works with \texttt{etcd}. In order to maintain a homogeneous environment, \texttt{etcd} has been used for all overlays which require a key-value store. The Amsterdam site has been selected to house the \texttt{etcd} instance. In a real world scenario it would be desirable to deploy the key-value store as a distributed system in itself. However, due to the fact that process resilience is of lesser importance during this project we have opted to deploy a standalone instance of \texttt{etcd} without any clustering. As previously discussed, the key-value store is only used by containers to register their service and by the overlays to store the network state. As such, \texttt{etcd} doesn't negatively affect performance. Because Weave utilizes an eventually consistent distributed configuration model (CRDT), no key-value store is required for this particular overlay.
+
+Lastly, no specific configuration steps have been taken to integrate the overlay solutions with \texttt{libnetwork}. Current versions of Weave automatically run as a plugin, given the Docker version on the system is 1.9 or above. This means that Weave does not function as a wrapper to the Docker API anymore but gains more native integration. As Flannel works separately from \texttt{libnetwork}, this overlay has been tested as a standalone. Implicitly, the native overlay driver exclusively functions as a plug-in to \texttt{libnetwork}. Since the native overlay driver requires a kernel version of at least 3.16, we have upgraded all machines in GTS from their default 3.13 kernel to version 3.19 with the bootstrap script. 
+
+\subsection{Measurement tools} \label{tools}
+To measure the performance, \texttt{iperf} and \texttt{netperf} are used. These tools are both industry standard applications for benchmarking connections and are used in a multitude of scientific papers \cite{rohprimardho2015}, \cite{jorisclaassen2015}, \cite{Kra2015b}, \cite{barker2010empirical}. During our research \texttt{iperf} is primarily used to measure the UDP and TCP throughput, while \texttt{netperf} is primarily used to measure the latency between sites and the effect of employing an overlay solution on the overall latency. While \texttt{iperf} could technically be used to measure latency, \texttt{netperf} provides more detailed statistics out of the box. Furthermore we are interested in the potential jitter introduced by each overlay solution. Here, jitter refers to the variability in delay between receiving packets. Naturally, a connection with irregular intervals will have an undesirable amount of jitter which may be disruptive for latency sensitive applications. We have opted not to tune the measurement tools (e.g. the TCP window size or segment sizes), as we are merely interested in the relative performance difference between the overlay solutions. Whilst measuring the performance, the default parameters for both \texttt{iperf} and \texttt{netperf} have been used. The main point of interest is running the exact same benchmark in every situation. 
+
+Because the measurements will be performed between containers, the measurement tools have been 'dockerized'. This term refers to converting an application to run in a Docker container. This inherently means that the measurement tools are initiated from within the Docker container and perform their measurements through the virtual ethernet interfaces (\texttt{veth}) of the container and the overlay specific interfaces. Thus, by dockerizing the tools we can guarantee that we are measuring the impact of the overlay solution and the container on performance. To dockerize the tools, a Dockerfile has been created which is displayed in full in Appendix \ref{app:dockerfile}. The Dockerfile includes common performance measurement tools like \texttt{iperf} 2.0.5, \texttt{iperf} 3.0.11 and \texttt{netperf} 2.6.0. The Dockerfile guarantees that every deployed container is homogeneous and uses the exact same configurations and resources. 
+
+Important to note is that a patch is included in the Dockerfile for \texttt{iperf} 2.0.5. This patch, courtesy of Roderick W. Smith \cite{smith_2014}, fixes a bug that causes \texttt{iperf} on Linux to consume 100\% CPU at the end of a run when it's run in daemon mode (e.g., \texttt{'iperf -sD'}). After running a measurement against the \texttt{iperf} daemon, the process would remain at 100\% CPU utilization. Subsequent measurements would cause the server in question to quickly be brought to its knees.
+
+\begin{figure}[!ht]
+   \centering
+   \includegraphics[scale=0.85]{img/testscenario.png}
+   \caption{Client server model employed by the measurement tools}
+   \label{fig:cltsrvmodel}
+\end{figure}
+
+All of the selected measurement tools follow a client-server model and require a server component to be active and running on the opposing site. This principle is illustrated in figure \ref{fig:cltsrvmodel}. The Dockerfile in Appendix \ref{app:dockerfile} includes a \texttt{CMD} statement which refers to a performance measurement script. This way, the script is ran as the initial command when deploying a container from the image. The script was built to accept a variety of environment variables by specifying the \texttt{'-e'} flag when running the container. These variables are used in the performance measurement script to differentiate between client and server mode, the type of measurement (TCP or UDP) and the available tools. The full performance measurement script is presented in Appendix \ref{app:script}. Listing \ref{runcontainer} presents a generic example of a container deployment. The full set of environment variables is displayed in the latter command and includes logging specific variables like the source and destination site (for point-to-point measurements) and the specific overlay used. 
+\\
+\begin{lstlisting}[caption={Creating the server and client container},label=runcontainer]
+# Create a server container
+docker run -e MODE="SERVER" $IMAGE_ID
+# Create a client container
+docker run -e MODE="CLIENT" -e TEST="IPERF" -e TYPE="TCP" -e SRCSITE="AMS" -e DSTSITE="PRG" -e ADDRESS="192.168.0.1" -e OVERLAY="WEAVE" -v /data $IMAGE_ID
+\end{lstlisting}
+
+When running the first command, a server container is deployed. This means that a \texttt{netperf} server is started and \texttt{iperf} daemons for both UDP and TCP communication are invoked on alternating ports. The \$IMAGE\_ID variable refers to the identifier of the image which is a result of building the container image from the Dockerfile. This can be done via the \texttt{'docker build'} command. Lastly, the client command includes a \texttt{'-v'} flag with an arbitrary directory. This directory, located on the underlying host, is attached as a volume to the container and is used to write logging data to.
+\\\\
+When the client container is started, a performance measurement is ran for 115 seconds, based on the environment variables specified. When the script finishes, the container moves to an exited state. In order to automate the measurements, cronjobs have been used. The cronjob schedule restarts a container that has exited to perform another measurement at a given interval. Generally we use a two minute interval in between the cronjobs. The measurement is only ran for 115 seconds, which leaves 5 seconds of overhead for the application or possibly the Docker container to start and exit. It is worth noting that the daemon processes on the server never finish, and therefore will keep running forever. This means that they are not included in any cronjobs. Because we are running three separate tests, three client containers are created, one for each measurement tool and type. Listing \ref{cronexample} presents an example of a crontab and shows measurements for the link between the virtual machines in Bratislava and Ljubljana and the link between the containers in each site respectively.  
+\\
+\begin{lstlisting}[caption={Crontab example for the point-to-point link between AMS and LJU},label=cronexample]
+# m  h        dom mon dow user command
+  0 * * * * root bash /root/netperf.sh 192.168.4.4 VM AMS LJU
+  2 * * * * root docker start PERF_CLT_AMStoLJU
+  4 * * * * root bash /root/iperf_TCP.sh 192.168.4.4 VM AMS LJU
+  6 * * * * root docker start PERF_CLT_AMStoLJU_TCP
+  8 * * * * root bash /root/iperf_UDP.sh 192.168.4.4 VM AMS LJU
+  10 * * * * root docker start PERF_CLT_AMStoLJU_UDP
+\end{lstlisting}
+
+During the course of the project, Ubuntu was used as the distribution of choice within the virtual GTS environment as well as for the base image of the containers because it is a commonly available distribution with practically all cloud providers of IaaS environments. Furthermore, Ubuntu forms a common ground for all the tested overlay solutions with sufficient amounts of documentation available.
+
+\subsection{Experiment design}
+As previously discussed, the full mesh topology has been divided into multiple smaller topologies to evaluate the performance of the overlay solutions. A point-to-point topology and a star topology have been selected.  
+
+\subsubsection{Baseline}
+In order to gain insight into the 24-hour utilization of the GTS environment, We need to start with an initial baseline of the topology. The need for this baseline is strengthened given the fact we can't enforce the host placement of a specific virtual machine in GTS. So ideally, we would want to verify if node placement within a site is of any consequence to the performance during any point of the day. To do so, the VMs in the sites Amsterdam and Ljubljana have been tested in parallel with Bratislava and Milan for all instances within GTS. Only these two links have been selected for this baselining, as to increase the amount of measurements that can be taken within a short time span. The links have been chosen randomly as sites are presumed identical from the information gathered thus far. Additionally, it has been verified some VMs reside on the different physical host in its respective site. Other connections of the full mesh cannot be utilized during the sequential tests as to avoid pollution of the results. Effectively, this functions as a double sequential testing setup.
+\\
+\\
+Each measurement taken, regardless of the tool used, will run for two minutes an hour. This is scheduled using Cronjobs. A sample of a crontab is illustrated in listing \ref{cronexample}.
+
+\subsubsection{Point-to-Point}
+Ideally, we would want to introduce links with different performance characteristics into the test setup. This would give a more complete picture of the overlay performances in different situations. We can do this by repeating the first test but measuring all links in the full mesh, whereas before, two specific circuits were chosen.
+Regrettably, this would introduce a scheduling problem.
+Assuming 6 distinct circuits exist in our full mesh (as seen in figure 5), with each measurement requiring 2 minutes to complete, this would take 12 minutes. Each circuit has to run 6 measurements (3 docker and 3 VM) bringing the runtime to 72 minutes. This has to be done for all 3 instances bringing the total time to 216 minutes. Only a couple of these measurements can be run in parallel without interfering each other. The problem that occurs is that there is not enough time available to produce as many measurements as before with this kind of runtime. The two options we have is to either scale down the topology or accept fewer measurement per circuit.
+
+\begin{figure}[H]
+   \centering
+   \includegraphics[scale=0.50]{img/ptp_msmts.png}
+   \caption{Bechmark server container placement}
+   \label{fig:ptp_msmts}
+\end{figure}
+
+The option chosen is dependent on the characteristics the previous 24-hour measurements have shown. If these results have shown stable performance across the board, it would be safe to conduct the four-node full mesh tests with fewer measurements. If the 24-hour measurements show unsteady performance, it is best to scale the topology down. Additionally, the 24-hour test results can be cross referenced to the new ones, to check if any significant deviation exists.
+
+%Due to time restriction, we will only be able to take a limited amount of measurements assuming one measurement cycle requires 216 minutes to complete. This may cause the data to be unreliable due to fluctuations
+
+%With two specific links within each instance measured, %Why were they measured anyways?
+%the introduction of a multitude of different latency link could be interesting. % Could be interesting ? :p
+%This may help in understanding the effect the overlays have on various delay links. In repeating the measurements discussed above, this would mean that for each instance, six links require measuring. For every one of these links, \texttt{netperf}, \texttt{iperf\_udp} and \texttt{iperf\_tcp} will run every 2 minutes. This has to be repeated for the container platform. 
+
+
+%As previously discussed, the full mesh topology is reduced to a four-node mesh due to the Prague site being unavailable for an extended period of time. 
+
+%Most of these measurement cannot run in parallel regardless of the seperation of instances. This means an estimate of $6\:links \times 3\:tests \times 2\:minutes \times 2\:platforms \times 3\:instances = 216\:minutes\:per\:measurement\:cycle$.
+
+\subsubsection{Star topology, streaming media} \label{startopo}
+The previous test scenarios attempt to quantify the performance of the overlay solutions by means of a synthetic benchmark. To provide more insight in a real world use case, we also briefly explore the effect of deploying a latency sensitive distributed application in each of the selected overlay solutions. 
+\\ \\
+A common example of a latency sensitive system would be a streaming server, which is capable of serving multiple clients with a video stream on demand. Streaming servers generally require a fast, reliable connection to prevent deterioration of the media stream, especially when the total amount of parallel streams increases. Server- and client-side buffering can be utilized to hide sudden variation in the network. However, high variation in latency and an unpredictable throughput can still prove to be problematic for the quality of a media stream in general.
+
+For the purpose of this project we have opted to deploy Apple's open-source Darwin Streaming Server (DSS). This is the open source equivalent of Apple's proprietary QuickTime Streaming Server. The method utilized to perform the real world use case roughly resembles the setup as proposed by Barker and Shenoy \cite{barker2010empirical}. In their research the performance of several latency-sensitive applications in the Amazon EC2 cloud environment are evaluated. One of their experiments describes measuring the performance of a media streaming server with varying amounts of background load in a point-to-point topology.
+
+The topology in figure \ref{fig:stream_topology} illustrates the setup used to perform the application benchmark. Both the client and server component are part of the Media Streaming benchmark which in turn is part of the CloudSuite benchmark suite. CloudSuite is packaged by the PARSA lab at EPFL and contains a series of benchmarking tools aimed at measuring various performance aspects of cloud environments \footnote{The used benchmark suite is packaged by the PARSA lab at EPFL and is available at \url{parsa.epfl.ch/cloudsuite/streaming.html/}.}. The star topology provides flexibility in the sense that it allows for dynamically scaling up the topology in terms of client locations and parallel client requests. 
+
+\begin{figure}[!ht]
+   \centering
+   \includegraphics[scale=0.67]{img/distributed_usecase.png}
+   \caption{Streaming media server topology}
+   \label{fig:stream_topology}
+\end{figure}
+
+Measuring the quality of a media stream is challenging. Solely relying on the time required to download a stream doesn't necessarily indicate whether the stream was played back correctly. Furthermore, extreme jitter can potentially cause packets to be lost in transit or get dropped due to buffer overflows. When performing the real world use case, we measure performance by looking at the throughput of the streaming server with a varying amount of parallel streams. Ultimately we are interested in the potential jitter introduced by the overlay solutions.
+ 
+In our scenario, the DSS is placed in Bratislava and uses the Real-time Transport Protocol (RTP) for delivering the video stream to the clients via UDP. To simulate clients, Faban has been used. Faban is an open source performance workload creation and execution framework. The Faban component functions as a workload generator and emulates real world clients by creating Java workers which send requests via \texttt{curl} to the streaming server. \texttt{curl} is compiled to support a Real-time Streaming Protocol (RTSP) library. The Media Streaming benchmark includes basic configuration file templates which have been modified to let Faban wait until all workers are fully up and running before requesting a stream. This way a simultaneous stress-test is guaranteed without a variable ramp up period. 
+
+On both the server and client side the network interfaces are rate limited by utilizing \texttt{wondershaper}. Wonder Shaper functions as a front-end to iproute's \texttt{tc} command and can limit a network adapter's bandwidth. Limiting the bandwidth of the network interfaces allows us more granular control over the division of the link as well as making the resulting dataset from the measurements more manageable. Furthermore, by limiting the speed of the interface the performance influence of the CPU is reduced to a minimum. 
+
+To visualize the effect of increasing the amount of clients, each of the sites is tested with one, three and nine Java workers respectively. At maximum this results in a total of 21 streams originating from the DSS to the clients divided over three links. For the purpose of this experiment DSS serves up a synthetic dataset, comprising of exclusively a stresstest video with a bit rate of 1 Mbps. The selected video contains a gradually increasing animation which is repeated a series of times during the measurement. This ensures that the bit rate of the video is sent in irregular bursts, as would be the case in a real world scenario. Listing \ref{fabanexample} shows a snippet of the configuration file Faban uses to initiate a  stresstest. 
+\\
+\begin{lstlisting}[caption={Faban driver configuration pointing to the stresstest operation},label=fabanexample]
+<?xml version="1.0" encoding="UTF-8"?>
+<streamBenchmark>
+{...}
+        <driverConfig name="StreamDriver">
+            <agents>3</agents>
+            <runtimeStats target="9988"/>
+            <operationMix>
+               <name>Stresstest</name>
+                <r>100</r>
+            </operationMix>
+        </driverConfig>
+    </fa:runConfig>
+{...}
+</streamBenchmark>
+\end{lstlisting}
+\noindent
+The throughput of the streams is measured by starting a series of parallel streams and averaging the bit rate of the streams on the client side. When the maximum amount of workers is started, the load of the streams takes up around 9000 Kbps on each of the links shown in figure \ref{fig:stream_topology} link. Due to the fact that the video bursts its bit rate, congestion is created on the rate limited links depending on the amount of workers. To evaluate jitter, the remainder of the link is saturated with three \texttt{netperf} sessions originating from the server, each consuming 1 Mbps. This way jitter statistics are collected for each of the connected links while saturating the available bandwidth. Each performance measurement is ran for three minutes and repeated five times for each of the indicated amounts of workers. 
