@@ -33,6 +33,7 @@ if [[ $RESPONSE =~ ^(yes|y)$ ]]; then
   else
     service $SERVICE start
   fi
+
 else
   echo "WARNING: by not choosing to install Docker, installing an overlay solution may fail."
   read -r -p "Are you sure you want to continue? [y/n] " RESPONSE
@@ -41,12 +42,6 @@ else
     exit 1
   fi
 fi
-
-# add user to docker group to allow running it without sudo (see: http://askubuntu.com/a/477554)
-sudo groupadd docker
-sudo gpasswd -a ${USER} docker
-sudo service docker restart
-newgrp docker
 
 # Change styling of command line prompt
 echo -e "\\n# set style of command line prompt\\nexport PS1='\e[01;31m\u@\h\[\033[01;34m\] \w $\[\033[00m\] '" >> ~/.profile
