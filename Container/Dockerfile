@@ -24,7 +24,7 @@ RUN apt-get -qq update && apt-get install -yqq \
   git
 
 # Pull and build testing tools (iperf3 & netperf)
-RUN wget --no-check-certificate https://iperf.fr/download/iperf_3.0/iperf3_3.0.11-1_amd64.deb https://iperf.fr/download/iperf_3.0/libiperf0_3.0.11-1_amd64.deb
+RUN wget --no-check-certificate https://iperf.fr/download/ubuntu/iperf3_3.0.11-1_amd64.deb https://iperf.fr/download/ubuntu/libiperf0_3.0.11-1_amd64.deb
 RUN dpkg -i libiperf0_3.0.11-1_amd64.deb iperf3_3.0.11-1_amd64.deb && rm libiperf0_3.0.11-1_amd64.deb iperf3_3.0.11-1_amd64.deb
 RUN wget --no-check-certificate ftp://ftp.netperf.org/netperf/netperf-2.7.0.tar.gz && tar -xzvf netperf-2.7.0.tar.gz
 RUN cd netperf-2.7.0 && ./configure --enable-demo=yes && make && make install && rm ../netperf-2.7.0.tar.gz
