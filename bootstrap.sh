@@ -17,6 +17,9 @@ echo "Enter a hostname" && read "HOSTNAME"
 hostname $HOSTNAME && echo $HOSTNAME>/etc/hostname
 sed -i -e 's/sa2host/'$HOSTNAME'/' /etc/hosts
 
+# Change styling of command line prompt
+echo "\n# set style of command line prompt\nexport PS1='\e[01;31m\u@\h\[\033[01;34m\] \w $\[\033[00m\] '" >> ~/.profile
+
 # Install Docker
 read -r -p "Install Docker? [y/n] " RESPONSE
 RESPONSE=${RESPONSE,,}
