@@ -19,7 +19,7 @@ sed -i -e 's/sa2host/'$HOSTNAME'/' /etc/hosts
 
 # Change styling of command line prompt
 echo -e "\\n# set style of command line prompt\\nexport PS1='\e[01;31m\u@\h\[\033[01;34m\] \w $\[\033[00m\] '" >> ~/.profile
-source ~/.profile
+. ~/.profile
 
 # Install Docker
 read -r -p "Install Docker? [y/n] " RESPONSE
@@ -60,5 +60,5 @@ case $INPUT in
 		printf " Press ENTER to bootstrap overlay."; read; cd ./Overlays/Calico/; ./setup.sh;;
     3 ) printf "\nYou selected 'Flannel'."
 		printf " Press ENTER to bootstrap overlay."; read; cd ./Overlays/Flannel/; ./setup.sh;;
-    *)  printf "You selected not to install an overlay solution."; break;;
+    *)  printf "You selected not to install an overlay solution.";;
 esac
