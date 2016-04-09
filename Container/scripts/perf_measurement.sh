@@ -2,7 +2,7 @@
 # This script reads ENV variables set by the Dockerfile by default. To
 # override this behaviour, specify variables with docker run -e "VAR=value".
 # Examples:
-# docker run -e MODE="CLIENT" -e TEST="IPERF" -e TYPE="UDP" -e SRCSITE="AMS" -e DSTSITE="PRG" -e ADDRESS="172.17.0.2" -e OVERLAY="NONE" -v /data 18c2d4864eb3
+# docker run -e MODE="CLIENT" -e TEST="IPERF" -e TYPE="UDP" -e SRCSITE="AMS" -e DSTSITE="BRA" -e ADDRESS="172.17.0.2" -e OVERLAY="NONE" -v /data 8bea3ab223c6
 # docker run -e MODE="SERVER" $IMAGE_ID
 
 # Get the IP address of the machine
@@ -35,7 +35,7 @@ if [[ $MODE == "CLIENT" ]]; then
 		fi
 	fi
 
-else
+elif [[ MODE == "SERVER" ]]; then
     # Enter server condition if the $MODE =! client
 	netserver
 	# Run server as daemon mode
