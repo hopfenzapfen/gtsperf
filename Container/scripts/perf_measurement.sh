@@ -35,7 +35,7 @@ if [[ $MODE == "CLIENT" ]]; then
 		fi
 	fi
 
-elif [[ MODE == "SERVER" ]]; then
+elif [[ $MODE == "SERVER" ]]; then
     # Enter server condition if the $MODE =! client
 	netserver
 	# Run server as daemon mode

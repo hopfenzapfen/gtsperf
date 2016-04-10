@@ -43,10 +43,6 @@ else
   fi
 fi
 
-# Change styling of command line prompt
-echo -e "\\n# set style of command line prompt\\nexport PS1='\e[01;31m\u@\h\[\033[01;34m\] \w $\[\033[00m\] '" >> ~/.bashrc
-. ~/.bashrc
-
 # Increase kernel version to 3.19
 echo "Upgrading kernel version..."
 sudo apt-get install -yqq linux-generic-lts-vivid
