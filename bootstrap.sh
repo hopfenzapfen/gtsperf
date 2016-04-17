@@ -40,7 +40,7 @@ if [[ $RESPONSE =~ ^(yes|y)$ ]]; then
 
   # add the "gts" user to docker group to allow running it without sudo (see: http://askubuntu.com/a/477554)
   sudo gpasswd -a gts docker
-  sudo service docker restart
+  sudo service docker restart &
   newgrp docker
 
 else
