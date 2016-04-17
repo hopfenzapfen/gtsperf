@@ -38,12 +38,6 @@ if [[ $RESPONSE =~ ^(yes|y)$ ]]; then
     service $SERVICE start
   fi
 
-  # add the "gts" user to docker group to allow running it without sudo (see: http://askubuntu.com/a/477554)
-  sudo apt-get install -yqq at
-  sudo gpasswd -a gts docker
-  newgrp docker
-  sudo service docker restart | at now
-
 else
   echo "WARNING: by not choosing to install Docker, installing an overlay solution may fail."
   read -r -p "Are you sure you want to continue? [y/n] " RESPONSE
