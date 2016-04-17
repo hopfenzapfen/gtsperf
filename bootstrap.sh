@@ -18,7 +18,7 @@ hostname $HOSTNAME && echo $HOSTNAME>/etc/hostname
 sed -i -e 's/sa2host/'$HOSTNAME'/' /etc/hosts
 
 # Enable colorful prompt
-sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/g' ~/.bashrc
+sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/g' /home/gts/.bashrc
 source /home/gts/.bashrc
 
 # Install Docker
