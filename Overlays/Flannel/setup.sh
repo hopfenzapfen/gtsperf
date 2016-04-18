@@ -24,7 +24,7 @@ else
   export INSTALLER_TYPE=slave
 fi
 
-NODE_ADDR=$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
+NODE_ADDR=$(/sbin/ifconfig eth1 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
 if [[ $INSTALLER_TYPE == 'master' ]]; then
   export MASTER_IP=$NODE_ADDR
   # Move the appropriate files to allow for autoconfig. Also refer to the comments in the separate files.
