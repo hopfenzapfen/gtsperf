@@ -98,7 +98,7 @@ start_etcd() {
 
 update_flanneld_subnet() {
   ## update the key in etcd which determines the subnet that flannel uses
-  $ETCD_EXECUTABLE_LOCATION/etcdctl --peers=http://$MASTER_IP:$ETCD_PORT set coreos.com/network/config '{"Network":"'"$FLANNEL_SUBNET"'"}'
+  $ETCD_EXECUTABLE_LOCATION/etcdctl --peers=http://$MASTER_IP:$ETCD_PORT set coreos.com/network/config '{"Network":"'"$FLANNEL_SUBNET"'", "Backend": {"Type": "vxlan"}}'
 }
 
 clear_network_entities() {
