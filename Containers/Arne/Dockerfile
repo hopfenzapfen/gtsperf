@@ -20,12 +20,9 @@ WORKDIR ${dir}
 
 # Update sources & install essential tools and iperf 3
 RUN apt-get -qq update && apt-get install -yq 	wget build-essential git software-properties-common make nano
-RUN sudo add-apt-repository -y "ppa:patrickdk/general-lucid" && \
+RUN add-apt-repository -y "ppa:patrickdk/general-lucid" && \
 	apt-get -qq update && \
 	apt-get install -yq iperf3
-
-# set xterm in order to use nano
-RUN export TERM=xterm
 
 # install iperf
 RUN apt-get install -yq iperf
@@ -46,11 +43,14 @@ RUN wget http://kernel.ubuntu.com/~cking/tarballs/stress-ng/stress-ng-0.03.11.ta
 # install python libraries (for testing performance and plotting results)
 RUN apt-get install -yq python python-matplotlib python-numpy
 
+# set xterm in order to use nano
+RUN export TERM=xterm
+
 # copy test scripts
-# ADD measureDatagramEffect.py ${dir}/DatagramPerf.py
-# ADD measureCPUeffect.py ${dir}/CPUperf.py
-# ADD measureWindowEffect.py ${dir}/WindowPerf.py
-# ADD measureOffloadEffect.py ${dir}/OffloadPerf.py
+ADD measureDatagramEffect.py ${dir}/DatagramPerf.py
+ADD measureCPUeffect.py ${dir}/CPUperf.py
+ADD measureWindowEffect.py ${dir}/WindowPerf.py
+ADD measureOffloadEffect.py ${dir}/OffloadPerf.py
 
 # Expose the default ports, statically linked (iperf TCP/UDP, iperf3, netperf)
 EXPOSE 5001:5001 5002:5002 5201:5201 12865:12865
